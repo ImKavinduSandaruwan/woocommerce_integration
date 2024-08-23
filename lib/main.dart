@@ -34,11 +34,66 @@ class _ProductsScreenState extends State<ProductsScreen> {
     _products = _service.fetchProducts();
   }
 
+  void _addProduct() async {
+    Map<String, dynamic> newProductData = {
+      'name': 'New Product',
+      'type': 'simple',
+      'regular_price': '29.99',
+      'description': 'This is a new product',
+      'short_description': 'A short description of the new product',
+      'sku': 'NP001',
+      'manage_stock': true,
+      'stock_quantity': 100,
+      'categories': [
+        {'id': 15} // Ensure this category ID exists in WooCommerce
+      ],
+      'images': [
+        {'src': 'https://i.imgur.com/example.jpg'} // Replace with a valid image URL
+      ],
+    };
+
+    try {
+      await _service.addProduct(newProductData);
+      setState(() {
+        _products = _service.fetchProducts(); // Refresh the product list
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Product added successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add product: $e')),
+      );
+    }
+  }
+
+  void _removeProduct(int productId) async {
+    try {
+      await _service.removeProduct(productId);
+      setState(() {
+        _products = _service.fetchProducts(); // Refresh the product list
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Product removed successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to remove product: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Products'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: _addProduct, // Add a product
+          ),
+        ],
       ),
       body: FutureBuilder<List<dynamic>>(
         future: _products,
@@ -61,6 +116,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     height: 50,
                     width: 50,
                     fit: BoxFit.cover,
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      _removeProduct(product['id']); // Remove a product
+                    },
                   ),
                 );
               },
